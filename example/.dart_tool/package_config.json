@@ -1,0 +1,55 @@
+{
+  "configVersion": 2,
+  "packages": [
+    {
+      "name": "bidirectional_scroll_view",
+      "rootUri": "../../",
+      "packageUri": "lib/",
+      "languageVersion": "2.0"
+    },
+    {
+      "name": "collection",
+      "rootUri": "file:///Users/joshnies/tools/flutter/.pub-cache/hosted/pub.dartlang.org/collection-1.14.12",
+      "packageUri": "lib/",
+      "languageVersion": "2.0"
+    },
+    {
+      "name": "flutter",
+      "rootUri": "file:///Users/joshnies/tools/flutter/packages/flutter",
+      "packageUri": "lib/",
+      "languageVersion": "2.2"
+    },
+    {
+      "name": "meta",
+      "rootUri": "file:///Users/joshnies/tools/flutter/.pub-cache/hosted/pub.dartlang.org/meta-1.1.8",
+      "packageUri": "lib/",
+      "languageVersion": "1.12"
+    },
+    {
+      "name": "sky_engine",
+      "rootUri": "file:///Users/joshnies/tools/flutter/bin/cache/pkg/sky_engine",
+      "packageUri": "lib/",
+      "languageVersion": "1.11"
+    },
+    {
+      "name": "typed_data",
+      "rootUri": "file:///Users/joshnies/tools/flutter/.pub-cache/hosted/pub.dartlang.org/typed_data-1.1.6",
+      "packageUri": "lib/",
+      "languageVersion": "2.0"
+    },
+    {
+      "name": "vector_math",
+      "rootUri": "file:///Users/joshnies/tools/flutter/.pub-cache/hosted/pub.dartlang.org/vector_math-2.0.8",
+      "packageUri": "lib/",
+      "languageVersion": "2.0"
+    },
+    {
+      "name": "bidirectional_scroll_view_example",
+      "rootUri": "../",
+      "packageUri": "lib/"
+    }
+  ],
+  "generated": "2020-05-18T17:47:35.372090Z",
+  "generator": "pub",
+  "generatorVersion": "2.9.0-3.0.dev.flutter-94178e920e"
+}

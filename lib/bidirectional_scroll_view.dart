@@ -269,7 +269,7 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
     xPos = xViewPos;
     yPos = yViewPos;
 
-    _enableFling = true;
+    _enableFling = false;
     _flingAnimation = new Tween<Offset>(
         begin: new Offset(0.0, 0.0),
         end: direction * distance * _velocityFactor
