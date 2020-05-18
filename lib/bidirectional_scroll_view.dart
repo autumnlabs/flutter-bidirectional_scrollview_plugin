@@ -10,7 +10,7 @@ class BidirectionalScrollViewPlugin extends StatefulWidget {
     this.initialOffset,
     this.scrollDirection,
     this.scrollListener,
-    this.scrollOverflow = Overflow.visible,
+    this.scrollOverflow = Overflow.clip,
   });
 
   final Widget child;
