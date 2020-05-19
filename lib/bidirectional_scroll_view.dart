@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class BidirectionalScrollViewPlugin extends StatefulWidget {
   BidirectionalScrollViewPlugin({@required this.child,
@@ -88,7 +90,6 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
   Widget _child;
   double _childWidth;
   double _childHeight;
-  double _velocityFactor = 1.0;
   Offset _initialOffset = new Offset(0.0, 0.0);
   ScrollDirection _scrollDirection = ScrollDirection.both;
   ValueChanged<Offset> _scrollListener;
@@ -98,10 +99,7 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
   double xViewPos = 0.0;
   double yViewPos = 0.0;
 
-  AnimationController _controller;
-  Animation<Offset> _flingAnimation;
-
-  bool _enableFling = false;
+  bool _isPanning = false;
 
   _BidirectionalScrollViewState(Widget child, double childWidth,
       double childHeight, double velocityFactor,
@@ -110,15 +108,15 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
     _child = child;
     _childWidth = childWidth;
     _childHeight = childHeight;
-    if (velocityFactor != null) {
-      this._velocityFactor = velocityFactor;
-    }
+
     if (scrollListener != null) {
       _scrollListener = scrollListener;
     }
+
     if (scrollDirection != null) {
       _scrollDirection = scrollDirection;
     }
+
     if (initialOffset != null) {
       _initialOffset = initialOffset;
       xViewPos = _initialOffset.dx;
@@ -130,8 +128,6 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback(_afterLayout);
     super.initState();
-    _controller = new AnimationController(vsync: this)
-      ..addListener(_handleFlingAnimation);
   }
 
   _afterLayout(_) {
@@ -186,38 +182,29 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
     return containerBox.size.width;
   }
 
-  void _handleFlingAnimation() {
-    if (!_enableFling || _flingAnimation.value.dx.isNaN ||
-        _flingAnimation.value.dy.isNaN) {
+  void _handlePanDown(PointerDownEvent details) {
+    // Only pan if right mouse
+    if (details.buttons != 2) {
       return;
     }
 
-    double newXPosition = xPos + _flingAnimation.value.dx;
-    double newYPosition = yPos + _flingAnimation.value.dy;
-
-    if (newXPosition > _initialOffset.dx || width < containerWidth) {
-      newXPosition = _initialOffset.dx;
-    } else if (-newXPosition + containerWidth > width) {
-      newXPosition = containerWidth - width;
-    }
-
-    if (newYPosition > _initialOffset.dy || height < containerHeight) {
-      newYPosition = _initialOffset.dy;
-    } else if (-newYPosition + containerHeight > height) {
-      newYPosition = containerHeight - height;
-    }
+    final RenderBox referenceBox = context.findRenderObject();
+    Offset position = referenceBox.globalToLocal(details.position);
+    xPos = position.dx;
+    yPos = position.dy;
 
     setState(() {
-      xViewPos = newXPosition;
-      yViewPos = newYPosition;
+      _isPanning = true;
     });
-
-    _sendScrollValues();
   }
 
-  void _handlePanUpdate(DragUpdateDetails details) {
+  void _handlePanUpdate(PointerMoveEvent details) {
+    if (!_isPanning) {
+      return;
+    }
+
     final RenderBox referenceBox = context.findRenderObject();
-    Offset position = referenceBox.globalToLocal(details.globalPosition);
+    Offset position = referenceBox.globalToLocal(details.position);
 
     double newXPosition = xViewPos + (position.dx - xPos);
     double newYPosition = yViewPos + (position.dy - yPos);
@@ -250,33 +237,13 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
     _sendScrollValues();
   }
 
-  void _handlePanDown(DragDownDetails details) {
-    _enableFling = false;
-    final RenderBox referenceBox = context.findRenderObject();
-    Offset position = referenceBox.globalToLocal(details.globalPosition);
-
-    xPos = position.dx;
-    yPos = position.dy;
-  }
-
-  void _handlePanEnd(DragEndDetails details) {
-    final double magnitude = details.velocity.pixelsPerSecond.distance;
-    final double velocity = magnitude / 1000;
-
-    final Offset direction = details.velocity.pixelsPerSecond / magnitude;
-    final double distance = (Offset.zero & context.size).shortestSide;
-
+  void _handlePanEnd(PointerUpEvent event) {
     xPos = xViewPos;
     yPos = yViewPos;
 
-    _enableFling = false;
-    _flingAnimation = new Tween<Offset>(
-        begin: new Offset(0.0, 0.0),
-        end: direction * distance * _velocityFactor
-    ).animate(_controller);
-    _controller
-      ..value = 0.0
-      ..fling(velocity: velocity);
+    setState(() {
+      _isPanning = false;
+    });
   }
 
   _sendScrollValues() {
@@ -306,42 +273,42 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
               child: new Container(
                 key: _childKey,
                 child: _child,
-              )
-          )
+              ),
+          ),
         ],
       );
     }
 
-    return new GestureDetector(
-      onPanDown: _handlePanDown,
-      onPanUpdate: _handlePanUpdate,
-      onPanEnd: _handlePanEnd,
-      child: new Container(
-          key: _containerKey,
-          color: Colors.transparent,
-          child: new Stack(
-            overflow: widget.scrollOverflow,
-            children: <Widget>[
-              new Positioned(
-                key: _positionedKey,
-                top: yViewPos,
-                left: xViewPos,
-                width: _childWidth,
-                height: _childHeight,
-                child: new CustomScrollView(
-                    physics: new NeverScrollableScrollPhysics(),
-                    slivers: [
-                      SliverSafeArea(
-                        sliver: SliverFillRemaining(
-                          child: _child,
-                        ),
-                      )
-                    ]
+    return new Listener(
+        onPointerDown: _handlePanDown,
+        onPointerMove: _handlePanUpdate,
+        onPointerUp: _handlePanEnd,
+        child: new Container(
+            key: _containerKey,
+            color: Colors.transparent,
+            child: new Stack(
+              overflow: widget.scrollOverflow,
+              children: <Widget>[
+                new Positioned(
+                  key: _positionedKey,
+                  top: yViewPos,
+                  left: xViewPos,
+                  width: _childWidth,
+                  height: _childHeight,
+                  child: new CustomScrollView(
+                      physics: new NeverScrollableScrollPhysics(),
+                      slivers: [
+                        SliverSafeArea(
+                          sliver: SliverFillRemaining(
+                            child: _child,
+                          ),
+                        )
+                      ],
+                  ),
                 ),
-              ),
-            ],
-          )
-      ),
+              ],
+            ),
+        ),
     );
   }
 }
