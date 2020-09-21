@@ -1,0 +1,1 @@
+tar --exclude='.dart_tool' --exclude='.idea' --exclude='.vscode' --exclude='.git' --exclude='.github' --exclude='scripts' --exclude='example' -czvf ../bidirectional_scroll_view_0.1.1.tar.gz .
