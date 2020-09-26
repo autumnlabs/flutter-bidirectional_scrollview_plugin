@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 class BidirectionalScrollViewPlugin extends StatefulWidget {
-  BidirectionalScrollViewPlugin({@required this.child,
+  BidirectionalScrollViewPlugin({
+    @required this.child,
     this.childWidth,
     this.childHeight,
     this.velocityFactor,
     this.initialOffset,
     this.scrollDirection,
     this.scrollListener,
-    this.scrollOverflow = Overflow.clip,
   });
 
   final Widget child;
@@ -22,21 +22,14 @@ class BidirectionalScrollViewPlugin extends StatefulWidget {
   final Offset initialOffset;
   final ScrollDirection scrollDirection;
   final ValueChanged<Offset> scrollListener;
-  final Overflow scrollOverflow;
 
   _BidirectionalScrollViewState _state;
 
   @override
   State<StatefulWidget> createState() {
     if (_state == null) {
-      _state = new _BidirectionalScrollViewState(
-          child,
-          childWidth,
-          childHeight,
-          velocityFactor,
-          initialOffset,
-          scrollDirection,
-          scrollListener);
+      _state = new _BidirectionalScrollViewState(child, childWidth, childHeight,
+          velocityFactor, initialOffset, scrollDirection, scrollListener);
     }
     return _state;
   }
@@ -101,9 +94,13 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
 
   bool _isPanning = false;
 
-  _BidirectionalScrollViewState(Widget child, double childWidth,
-      double childHeight, double velocityFactor,
-      Offset initialOffset, ScrollDirection scrollDirection,
+  _BidirectionalScrollViewState(
+      Widget child,
+      double childWidth,
+      double childHeight,
+      double velocityFactor,
+      Offset initialOffset,
+      ScrollDirection scrollDirection,
       ValueChanged<Offset> scrollListener) {
     _child = child;
     _childWidth = childWidth;
@@ -213,7 +210,6 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
     double containerWidth = containerBox.size.width;
     double containerHeight = containerBox.size.height;
 
-
     if (newXPosition > _initialOffset.dx || width < containerWidth) {
       newXPosition = _initialOffset.dx;
     } else if (-newXPosition + containerWidth > width) {
@@ -265,56 +261,50 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
     if (_childWidth == null && _childHeight == null) {
       // This is just a workaround to get the width and height of child widget
       return new Stack(
-        overflow: Overflow.visible,
         children: <Widget>[
           new Positioned(
-              top: 0,
-              left: 0,
-              child: new Container(
-                key: _childKey,
-                child: _child,
-              ),
+            top: 0,
+            left: 0,
+            child: new Container(
+              key: _childKey,
+              child: _child,
+            ),
           ),
         ],
       );
     }
 
     return new Listener(
-        onPointerDown: _handlePanDown,
-        onPointerMove: _handlePanUpdate,
-        onPointerUp: _handlePanEnd,
-        child: new Container(
-            key: _containerKey,
-            color: Colors.transparent,
-            child: new Stack(
-              overflow: widget.scrollOverflow,
-              children: <Widget>[
-                new Positioned(
-                  key: _positionedKey,
-                  top: yViewPos,
-                  left: xViewPos,
-                  width: _childWidth,
-                  height: _childHeight,
-                  child: new CustomScrollView(
-                      physics: new NeverScrollableScrollPhysics(),
-                      slivers: [
-                        SliverSafeArea(
-                          sliver: SliverFillRemaining(
-                            child: _child,
-                          ),
-                        )
-                      ],
-                  ),
-                ),
-              ],
+      onPointerDown: _handlePanDown,
+      onPointerMove: _handlePanUpdate,
+      onPointerUp: _handlePanEnd,
+      child: new Container(
+        key: _containerKey,
+        color: Colors.transparent,
+        child: new Stack(
+          children: <Widget>[
+            new Positioned(
+              key: _positionedKey,
+              top: yViewPos,
+              left: xViewPos,
+              width: _childWidth,
+              height: _childHeight,
+              child: new CustomScrollView(
+                physics: new NeverScrollableScrollPhysics(),
+                slivers: [
+                  SliverSafeArea(
+                    sliver: SliverFillRemaining(
+                      child: _child,
+                    ),
+                  )
+                ],
+              ),
             ),
+          ],
         ),
+      ),
     );
   }
 }
 
-enum ScrollDirection {
-  horizontal,
-  vertical,
-  both
-}
+enum ScrollDirection { horizontal, vertical, both }
